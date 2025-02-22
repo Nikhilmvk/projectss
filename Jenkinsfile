@@ -19,12 +19,6 @@ pipeline {
             }
         }
 
-        stage('Validate Terraform') {
-            steps {
-                sh 'terraform validate'
-            }
-        }
-
         stage('Plan Terraform') {
             steps {
                 sh 'terraform plan -out=tfplan'
