@@ -6,6 +6,10 @@ pipeline {
         choice(name: 'action', choices: ['apply', 'destroy'], description: 'Select the action to perform')
     }
 
+    environment {
+        AWS_DEFAULT_REGION = 'ap-south-1'
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -15,37 +19,52 @@ pipeline {
 
         stage('Terraform Init') {
             steps {
-                sh 'terraform init'
+                withCredentials([
+                    string(credentialsId: 'aws-access-key-id', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'aws-secret-access-key', variable: 'AWS_SECRET_ACCESS_KEY')
+                ]) {
+                    sh 'terraform init'
+                }
             }
         }
 
         stage('Plan') {
             steps {
-                script {
-                    if (params.action == 'destroy') {
-                        sh 'terraform plan -destroy -out=tfplan'
-                    } else {
-                        sh 'terraform plan -out=tfplan'
+                withCredentials([
+                    string(credentialsId: 'aws-access-key-id', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'aws-secret-access-key', variable: 'AWS_SECRET_ACCESS_KEY')
+                ]) {
+                    script {
+                        if (params.action == 'destroy') {
+                            sh 'terraform plan -destroy -out=tfplan'
+                        } else {
+                            sh 'terraform plan -out=tfplan'
+                        }
+                        sh 'terraform show -no-color tfplan > tfplan.txt'
                     }
-                    sh 'terraform show -no-color tfplan > tfplan.txt'
                 }
             }
         }
 
         stage('Apply / Destroy') {
             steps {
-                script {
-                    if (params.action == 'apply') {
-                        if (!params.autoApprove) {
-                            def plan = readFile 'tfplan.txt'
-                            input message: "Do you want to apply the plan?",
-                            parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
+                withCredentials([
+                    string(credentialsId: 'aws-access-key-id', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'aws-secret-access-key', variable: 'AWS_SECRET_ACCESS_KEY')
+                ]) {
+                    script {
+                        if (params.action == 'apply') {
+                            if (!params.autoApprove) {
+                                def plan = readFile 'tfplan.txt'
+                                input message: "Do you want to apply the plan?",
+                                parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
+                            }
+                            sh 'terraform apply -input=false tfplan'
+                        } else if (params.action == 'destroy') {
+                            sh 'terraform destroy --auto-approve'
+                        } else {
+                            error "Invalid action selected. Please choose either 'apply' or 'destroy'."
                         }
-                        sh 'terraform apply -input=false tfplan'
-                    } else if (params.action == 'destroy') {
-                        sh 'terraform destroy --auto-approve'
-                    } else {
-                        error "Invalid action selected. Please choose either 'apply' or 'destroy'."
                     }
                 }
             }
@@ -55,20 +74,6 @@ pipeline {
             steps {
                 sh 'rm -f tfplan tfplan.txt'
             }
-        }
-    }
-
-    environment {
-        AWS_DEFAULT_REGION = 'ap-south-1'
-    }
-
-    // Use withCredentials for security
-    options {
-        withCredentials([
-            string(credentialsId: 'aws-access-key-id', variable: 'AWS_ACCESS_KEY_ID'),
-            string(credentialsId: 'aws-secret-access-key', variable: 'AWS_SECRET_ACCESS_KEY')
-        ]) {
-            echo "Using AWS Credentials Securely"
         }
     }
 }
