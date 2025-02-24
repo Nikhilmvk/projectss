@@ -7,23 +7,23 @@ pipeline {
         AWS_DEFAULT_REGION    = 'ap-south-1'
     }
 
-   stage('Terraform Init') {
-    steps {
-        powershell 'C:\\Users\\USER\\Downloads\\terraform_1.10.5_windows_amd64\\terraform init'
-    }
-}
-
+    stages {  // ✅ Add missing 'stages' block
+        stage('Terraform Init') {
+            steps {
+                powershell 'C:\\Users\\USER\\Downloads\\terraform_1.10.5_windows_amd64\\terraform init'
+            }
+        }
 
         stage('Plan') {
             steps {
-                sh 'terraform plan'
+                powershell 'C:\\Users\\USER\\Downloads\\terraform_1.10.5_windows_amd64\\terraform plan'
             }
         }
 
         stage('Apply') {
             steps {
-                sh 'terraform apply -auto-approve'
+                powershell 'C:\\Users\\USER\\Downloads\\terraform_1.10.5_windows_amd64\\terraform apply -auto-approve'
             }
         }
-    }  // ✅ 'stages' block closes correctly
-}  // ✅ 'pipeline' block closes correctly
+    }  
+}
