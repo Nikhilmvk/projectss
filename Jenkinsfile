@@ -7,12 +7,12 @@ pipeline {
         AWS_DEFAULT_REGION    = 'ap-south-1'
     }
 
-    stages {
-        stage('Terraform Init') {
-            steps {
-                sh 'terraform init'
-            }
-        }
+stage('Terraform Init') {
+    steps {
+        powershell 'terraform init'
+    }
+}
+
         stage('Plan') {
             steps {
                 sh 'terraform plan'
