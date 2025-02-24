@@ -7,21 +7,23 @@ pipeline {
         AWS_DEFAULT_REGION    = 'ap-south-1'
     }
 
-stage('Terraform Init') {
-    steps {
-        powershell 'terraform init'
-    }
-}
+    stages {  // ✅ 'stages' block starts here
+        stage('Terraform Init') {
+            steps {
+                powershell 'terraform init'
+            }
+        }
 
         stage('Plan') {
             steps {
                 sh 'terraform plan'
             }
         }
+
         stage('Apply') {
             steps {
                 sh 'terraform apply -auto-approve'
             }
         }
-    }
-}
+    }  // ✅ 'stages' block closes correctly
+}  // ✅ 'pipeline' block closes correctly
