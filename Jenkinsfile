@@ -7,12 +7,12 @@ pipeline {
         AWS_DEFAULT_REGION    = 'ap-south-1'
     }
 
-    stages {  // ✅ 'stages' block starts here
-        stage('Terraform Init') {
-            steps {
-                powershell 'terraform init'
-            }
-        }
+   stage('Terraform Init') {
+    steps {
+        powershell 'C:\\Users\\USER\\Downloads\\terraform_1.10.5_windows_amd64\\terraform init'
+    }
+}
+
 
         stage('Plan') {
             steps {
